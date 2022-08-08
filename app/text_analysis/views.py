@@ -14,8 +14,9 @@ def person_infos(request, text):
     print(type(text))
     lst_names = extract_names(text)
     print("---------------------extract lst_names: ", lst_names)
-    get_person_infos_from_wikidata(lst_names)
-    return Response({"data":"ok"})
+    res = get_person_infos_from_wikidata(lst_names)
+    
+    return Response(res)
     #serializer = SnippetSerializer(data=request.data)
     #if serializer.is_valid():
     #    serializer.save()
