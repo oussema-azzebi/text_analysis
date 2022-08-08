@@ -1,6 +1,7 @@
 from django.db import models
 
 
+
 class Person(models.Model):
     """
     Person model
@@ -15,3 +16,10 @@ class Person(models.Model):
 
     def __str__(self):
         return self.name
+
+class Frequency(models.Model):
+    """
+    Frequency model
+    """
+    person = models.OneToOneField(Person, on_delete=models.CASCADE)
+    freq = models.PositiveSmallIntegerField(default=0)

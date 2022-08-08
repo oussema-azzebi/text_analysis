@@ -1,6 +1,7 @@
 import spacy
 import requests
-from .models import Person
+from .models import Person, Frequency
+import collections
 
 
 def extract_names(text):
@@ -16,7 +17,7 @@ def extract_names(text):
     return names
 
 
-def get_person_infos_from_wikidata(lst_names):
+def get_person_infos_from_wikidata(lst_names, names_frequency):
     """
         Function that allows to extract some basics person infos from wikidata
     """
@@ -53,15 +54,13 @@ def get_person_infos_from_wikidata(lst_names):
 
         r = requests.get(url, params={'format': 'json', 'query': sparql_query})
         data = r.json()
-        print("-------- resultat bindings : ", data['results']['bindings'])
-        print("-------- resultat bindings zero : ", data['results']['bindings'][0])
-        print("-----------------------------------------------------------------")
         data = data['results']['bindings'][0]
         person_json = formatting_Wiki_Data_Result(data)
         print("---------- person_json :", person_json)
-        #save_to_database(person_json)
+        save_to_database(person_json, names_frequency)
         output.append(person_json)
-    print("--------------------- database content", Person.objects.all())
+    print("--------------------- database Person content", Person.objects.all())
+    print("--------------------- database Frequency content", Frequency.objects.all())
 
     return output
 
@@ -80,11 +79,39 @@ def formatting_Wiki_Data_Result(data):
     person_json['image_link'] = data['imageLabel']['value']
     return person_json
 
-def save_to_database(data_dict):
+def save_to_database(data_dict, names_frequency):
     """
-        Function that allows saving data into Person model
+        Function that allows saving data into database
     """
+    print("------- save to the db function")
     name = data_dict["name"]
-    if not Person.objects.filter(name=name).exists():
+    frequency = names_frequency[str(name)]
+    print("-------------------------- name", name)
+    print("------ name frequency : ", names_frequency[str(name)])
+    if Person.objects.filter(name=name).exists():
+        print("---------------------- existe dans la database !!!")
+        p = Person.objects.get(name=name)
+        p2 = Frequency.objects.get(person=p.id)
+        old_freq = p2.freq
+        new_freq = old_freq + frequency
+        Frequency.objects.filter(id=p2.id).update(freq=new_freq)
+        print("value saved !!!")
+    else:
+        print("---------------------- n existe PAS dans la database !!!")
         p = Person(**data_dict)
+        p2 = Frequency(person=p, freq=1)
         p.save()
+        p2.save()
+
+def extract_names_frequency(lst_names):
+    """
+        Function that allows to exract name frequency in a list
+    """
+    counter = collections.Counter(lst_names)
+    return dict(counter)
+
+def remove_duplicates(lst_names):
+    """
+        Function that allow to remove duplicate name in a list
+    """
+    return list(set(lst_names))
