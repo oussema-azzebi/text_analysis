@@ -6,7 +6,7 @@ class Person(models.Model):
     """
     Person model
     """
-    name = models.CharField(max_length=255, null=True)
+    name = models.CharField(max_length=255, null=False)
     occupation = models.CharField(max_length=255, null=True)
     gender = models.CharField(max_length=255, null=True)
     birthday = models.CharField(max_length=255, null=True)

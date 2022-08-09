@@ -20,35 +20,54 @@ def person_infos(request, text):
     """
     Get person's infos from a text.
     """
-    lst_names = extract_names(text)
-    if not len(lst_names):
-        return
-    names_frequency = extract_names_frequency(lst_names)
-    print("---------------------extract lst_names: ", lst_names)
-    print("---------------------names frequency: ", names_frequency)
-    lst_names = remove_duplicates(lst_names)
-    print("-------- lst name not duplicate : ", lst_names)
-    res = get_person_infos_from_wikidata(lst_names, names_frequency)
-    return Response(res)
+    try:
+        lst_names = extract_names(text)
+        if not len(lst_names):
+            content = {'msg': 'no person found in text'}
+            return Response(content, status=status.HTTP_200_OK)
+        names_frequency = extract_names_frequency(lst_names)
+        print("---------------------extract lst_names: ", lst_names)
+        print("---------------------names frequency: ", names_frequency)
+        lst_names = remove_duplicates(lst_names)
+        print("-------- lst name not duplicate : ", lst_names)
+        res = get_person_infos_from_wikidata(lst_names, names_frequency)
+        return Response(res)
+    except Exception as e:
+        content = {'error': str(e)}
+        return Response(content, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def person_listing(request):
     """
-    Listing all person.
+    Listing all person or create a new person
     """
     if request.method == 'GET':
         lst_person = Person.objects.all()
         serializer = PersonSerializer(lst_person, many=True)
         return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = PersonSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def freq_listing(request):
     """
-    Listing all person frequency.
+    Listing all person frequency or update frequency for a person
     """
     if request.method == 'GET':
         lst_frequency = Frequency.objects.all()
         serializer = FrequencySerializer(lst_frequency, many=True)
         return Response(serializer.data)
+    elif request.method == 'POST':
+        person_id = request.data.get('person')
+        try:
+            instance = Frequency.objects.get(person=person_id)
+        except Frequency.DoesNotExist:
+            instance=None
+        serializer = FrequencySerializer(instance, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)

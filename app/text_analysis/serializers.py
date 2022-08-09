@@ -6,9 +6,10 @@ from .models import Person, Frequency
 class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
-        fields = '__all__'
+        fields = ('id', 'name', 'occupation', 'gender', 'birthday', 'sex',
+                'nationality', 'image_link')
 
 class FrequencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Frequency
-        fields = '__all__'
+        fields = ('id', 'person', 'freq')

@@ -25,15 +25,12 @@ def get_person_infos_from_wikidata(lst_names, names_frequency):
     for name in lst_names:
         person_name = ""
         name_splitted = name.split(" ")
-        print("name_splitted : ", name_splitted)
-        print("name de -1: ", name_splitted[-1])
         for element in name_splitted:
             if element == name_splitted[-1]:
-                print("---- TRUEEEE")
                 person_name += element
             else:
                 person_name += element + "_"
-        print("---------------------- person name : ", person_name)
+
         sparql_query ="""
             prefix schema: <http://schema.org/>
             SELECT ?itemLabel ?occupationLabel ?genderLabel ?bdayLabel ?sexLabel ?nationalityLabel ?imageLabel
@@ -49,18 +46,18 @@ def get_person_infos_from_wikidata(lst_names, names_frequency):
             }
             LIMIT 1""" % person_name
 
-
         url = 'https://query.wikidata.org/sparql'
 
         r = requests.get(url, params={'format': 'json', 'query': sparql_query})
         data = r.json()
-        data = data['results']['bindings'][0]
-        person_json = formatting_Wiki_Data_Result(data)
-        print("---------- person_json :", person_json)
-        save_to_database(person_json, names_frequency)
-        output.append(person_json)
-    print("--------------------- database Person content", Person.objects.all())
-    print("--------------------- database Frequency content", Frequency.objects.all())
+        if not len(data['results']['bindings']):
+            person_json = {'info' : f'no data found from wikidata for {person_name}'}
+            output.append(person_json)
+        else:
+            data = data['results']['bindings'][0]
+            person_json = formatting_Wiki_Data_Result(data)
+            save_to_database(person_json, names_frequency)
+            output.append(person_json)
 
     return output
 
@@ -99,19 +96,19 @@ def save_to_database(data_dict, names_frequency):
     else:
         print("---------------------- n existe PAS dans la database !!!")
         p = Person(**data_dict)
-        p2 = Frequency(person=p, freq=1)
+        p2 = Frequency(person=p, freq=frequency)
         p.save()
         p2.save()
 
 def extract_names_frequency(lst_names):
     """
-        Function that allows to exract name frequency in a list
+        Function that allows to exract name frequency from a list
     """
     counter = collections.Counter(lst_names)
     return dict(counter)
 
 def remove_duplicates(lst_names):
     """
-        Function that allow to remove duplicate name in a list
+        Function that allow to remove duplicate name from a list
     """
     return list(set(lst_names))
