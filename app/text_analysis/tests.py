@@ -57,9 +57,6 @@ class PublicPersonListingApiTests(TestCase):
         """Test creating a new person with invalid payload"""
         payload = {'name': ""}
         res = self.client.post(PERSON_LISTING_URL, payload)
-        #persons = Person.objects.all()
-        #serializer = PersonSerializer(persons, many=True)
-        #print("------- serializer data : ", serializer.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
 class PublicFrequencyListingApiTests(TestCase):

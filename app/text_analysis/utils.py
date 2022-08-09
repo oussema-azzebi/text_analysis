@@ -80,21 +80,16 @@ def save_to_database(data_dict, names_frequency):
     """
         Function that allows saving data into database
     """
-    print("------- save to the db function")
     name = data_dict["name"]
     frequency = names_frequency[str(name)]
-    print("-------------------------- name", name)
-    print("------ name frequency : ", names_frequency[str(name)])
+
     if Person.objects.filter(name=name).exists():
-        print("---------------------- existe dans la database !!!")
         p = Person.objects.get(name=name)
         p2 = Frequency.objects.get(person=p.id)
         old_freq = p2.freq
         new_freq = old_freq + frequency
         Frequency.objects.filter(id=p2.id).update(freq=new_freq)
-        print("value saved !!!")
     else:
-        print("---------------------- n existe PAS dans la database !!!")
         p = Person(**data_dict)
         p2 = Frequency(person=p, freq=frequency)
         p.save()

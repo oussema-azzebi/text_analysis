@@ -6,4 +6,5 @@ urlpatterns = [
     path('person_infos/<str:text>', views.person_infos, name="person_infos_get"),
     path('all_person_listing', views.person_listing, name="person_listing"),
     path('all_frequency_listing', views.freq_listing, name="freq_listing"),
+    path('stat_popular_names', views.stat_popular_names, name="stat_popular_names")
 ]
